@@ -3,6 +3,8 @@
 typedef struct bf_data {
   uint8_t *data;
   uint32_t position;
+  uint64_t *loop_stack;
+  uint32_t loop_pos;
 } bf_data;
 
 extern bf_data *bf;

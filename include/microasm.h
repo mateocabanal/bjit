@@ -11,6 +11,8 @@ void asm_arm64_regadd(microasm *a, uint8_t rd, uint8_t rn, uint8_t rm,
 void asm_arm64_immsub(microasm *a, uint8_t rd, uint8_t rn, uint8_t imm);
 void asm_arm64_regldrb(microasm *a, uint8_t rt, uint8_t rn);
 void asm_arm64_regstrb(microasm *a, uint8_t rt, uint8_t rn);
+void asm_arm64_regldr(microasm *a, uint8_t rt, uint8_t rn);
+void asm_arm64_regstr(microasm *a, uint8_t rt, uint8_t rn);
 void asm_arm64_immmov(microasm *a, uint8_t rn, uint16_t imm);
 void asm_arm64_syscall(microasm *a, uint16_t imm);
 void asm_arm64_regmov(microasm *a, uint8_t rd, uint8_t rm);

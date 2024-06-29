@@ -51,8 +51,22 @@ void asm_arm64_regstrb(microasm *a, uint8_t rt, uint8_t rn) {
   asm_write_32bit(a, instruction);
 }
 
+void asm_arm64_regstr(microasm *a, uint8_t rt, uint8_t rn) {
+  uint32_t instruction = 0xF9000000;
+  instruction |= (rn << 5) | rt;
+
+  asm_write_32bit(a, instruction);
+}
+
 void asm_arm64_regldrb(microasm *a, uint8_t rt, uint8_t rn) {
   uint32_t instruction = 0x39400000;
+  instruction |= (rn << 5) | rt;
+
+  asm_write_32bit(a, instruction);
+}
+
+void asm_arm64_regldr(microasm *a, uint8_t rt, uint8_t rn) {
+  uint32_t instruction = 0xF9400000;
   instruction |= (rn << 5) | rt;
 
   asm_write_32bit(a, instruction);
