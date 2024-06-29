@@ -9,8 +9,11 @@ I was able to get it into a working state in around ~24 hours. There might be so
 ### Features
 
 ✔️ ARM64 JIT, for maximum performance
+
 ✔️ Support user input via ',' syntax
+
 🚧 Support other architectures
+
 🚧 Optimize compiled instructions
 
 ### JIT Status
