@@ -7,8 +7,10 @@
 
 #define offsetof(type, field) ((unsigned long)&(((type *)0)->field))
 
+#define JIT_MEM_SIZE (131072)
+
 uint8_t *compile_bf(FILE *bf_file) {
-  uint8_t *memory = mmap(NULL, 4096, PROT_READ | PROT_WRITE | PROT_EXEC,
+  uint8_t *memory = mmap(NULL, JIT_MEM_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
   microasm bin = {.dest = memory};
@@ -28,8 +30,8 @@ uint8_t *compile_bf(FILE *bf_file) {
   while ((oper_bin = fgetc(bf_file)) != EOF) {
     char oper = (char)oper_bin;
 
-    // x0 = position
-    // x1 = data
+    // x0 = data
+    // x1 = loop array
     switch (oper) {
     case '>':
       asm_arm64_immadd(&bin, pos_reg, pos_reg, 1);
@@ -85,21 +87,20 @@ uint8_t *compile_bf(FILE *bf_file) {
       asm_arm64_immmov(&bin, 0, 0);
       asm_arm64_immmov(&bin, 1, 0);
       asm_arm64_immmov(&bin, 2, 0);
+      break;
 
-    case '$':
-      asm_arm64_regmov(&bin, 20, 0);        // Copy position to 20
-      asm_arm64_regmov(&bin, 21, 1);        // Copy pointer to 21
-      asm_arm64_regmov(&bin, 22, 2);        // Copy 2 to 22
-      asm_arm64_regadd(&bin, 1, 20, 21, 0); // Value at position
-      asm_arm64_regmov(&bin, 0, 0);
-      asm_arm64_immadd(&bin, 1, 0, 48);
-      asm_arm64_immmov(&bin, 8, 64); // 0x40 is write syscall
-      asm_arm64_immmov(&bin, 0, 1);  // STDOUT
-      asm_arm64_immmov(&bin, 2, 1);  // Length, which is 1
+    case ',':
+      asm_arm64_immmov(&bin, 8, 63);                   // Read syscall
+      asm_arm64_immmov(&bin, 0, 0);                    // STDIN
+      asm_arm64_regadd(&bin, 1, pos_reg, data_reg, 0); // Value at position
+      asm_arm64_immmov(&bin, 2, 1);
       asm_arm64_syscall(&bin, 0);
-      asm_arm64_regmov(&bin, 0, 20);
-      asm_arm64_regmov(&bin, 1, 21);
-      asm_arm64_regmov(&bin, 2, 22);
+      asm_arm64_immmov(&bin, 0, 0);
+      asm_arm64_immmov(&bin, 1, 0);
+      asm_arm64_immmov(&bin, 2, 0);
+      // printf("bf file has user input, this is not supported yet!\n");
+      // exit(-1);
+      break;
     }
   }
 
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
   bf = malloc(sizeof(bf_data));
   bf->position = 0;
   bf->data = malloc(30000);
-  bf->loop_stack = malloc(4096 * 8);
+  bf->loop_stack = malloc(8196 * 8); // Determines how deep nested loops can go
   bf->loop_pos = 0;
   memset(bf->data, 0, 30000);
 
@@ -135,12 +136,12 @@ int main(int argc, char **argv) {
 
   // Hmmm... So ARM64 calling convention returns x0??
 
-  printf("Running...\n");
+  printf("Running...\n\n");
   uint32_t x0 =
       ((uint32_t(*)(uint8_t *, uint64_t *))bin)(bf->data, bf->loop_stack);
 
 #if DEBUG
-  printf("\n\n### DEBUG ###\n");
+  printf("\n### DEBUG ###\n");
   printf("x0: %u\n", x0);
   printf("bf value at %u: %u\n", x0, bf->data[x0]);
   printf("bf loc: %p\n", bf->data);
@@ -150,8 +151,9 @@ int main(int argc, char **argv) {
   }
 #endif
 
-  munmap(bin, 4096);
+  munmap(bin, JIT_MEM_SIZE);
   free(bf->data);
+  free(bf->loop_stack);
   free(bf);
 
   return 0;
