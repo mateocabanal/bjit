@@ -37,6 +37,9 @@ uint8_t *compile_bf(FILE *bf_file) {
       asm_arm64_immadd(&bin, pos_reg, pos_reg, 1);
       break;
     case '<':
+      // Should it wrap?
+      asm_arm64_pcrelbranch_nz(&bin, pos_reg, 2);
+      asm_arm64_immmov(&bin, pos_reg, 30000);
       asm_arm64_immsub(&bin, pos_reg, pos_reg, 1);
       break;
     case '[':

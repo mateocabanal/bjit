@@ -17,7 +17,7 @@ void asm_arm64_immmov(microasm *a, uint8_t rn, uint16_t imm);
 void asm_arm64_syscall(microasm *a, uint16_t imm);
 void asm_arm64_regmov(microasm *a, uint8_t rd, uint8_t rm);
 void asm_arm64_immcmp(microasm *a, uint8_t rn, uint16_t imm);
-void asm_arm64_pcrelbranch_ne(microasm *a, uint32_t imm);
+void asm_arm64_pcrelbranch_nz(microasm *a, uint8_t rt, uint32_t imm);
 void asm_arm64_pcrelbranch_ze(microasm *a, uint8_t rt, uint32_t imm);
 void asm_arm64_br(microasm *a, uint8_t rn);
 void asm_arm64_getpcval(microasm *a, uint8_t rd);

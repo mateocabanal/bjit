@@ -103,9 +103,11 @@ void asm_arm64_immcmp(microasm *a, uint8_t rn, uint16_t imm) {
   asm_write_32bit(a, instruction);
 }
 
-void asm_arm64_pcrelbranch_ne(microasm *a, uint32_t imm) {
-  uint32_t instruction = 0x54000001;
-  instruction |= imm;
+// NOTE: Jumps to imm * 4
+void asm_arm64_pcrelbranch_nz(microasm *a, uint8_t rt, uint32_t imm) {
+  uint32_t instruction = 0xB5000000;
+  instruction |= rt;
+  instruction |= imm << 5;
 
   asm_write_32bit(a, instruction);
 }
