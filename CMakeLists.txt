@@ -11,6 +11,10 @@ if (CMAKE_BUILD_TYPE EQUAL "Debug")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
 endif()
 
+if (CMAKE_BUILD_TYPE EQUAL "Release")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+endif()
+
 file(GLOB SRC_FILES src/*.c)
 include_directories(include/)
 add_executable(bjit ${SRC_FILES})
