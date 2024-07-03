@@ -101,11 +101,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
     // x0 = data
     // x1 = loop array
     switch (oper) {
-    case '>':
-      if (debug && dump) {
-        asm_arm64_immmov(&bin, 0, (int)'>');
-      }
-
+    case '>': {
       int addptr_loop_count = 1;
       int addptr_ch_int = 0;
       while ((addptr_ch_int = fgetc(bf_file)) != EOF) {
@@ -120,14 +116,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       }
       asm_arm64_immadd(&bin, pos_reg, pos_reg, addptr_loop_count);
       break;
-    case '<':
-      // Should it wrap?
-      // asm_arm64_pcrelbranch_nz(&bin, pos_reg, 2);
-      // asm_arm64_immmov(&bin, pos_reg, 30000);
-      if (debug && dump) {
-        asm_arm64_immmov(&bin, 0, (int)'<');
-      }
-
+    }
+    case '<': {
       int subptr_loop_count = 1;
       int subptr_ch_int = 0;
       while ((subptr_ch_int = fgetc(bf_file)) != EOF) {
@@ -142,10 +132,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       }
       asm_arm64_immsub(&bin, pos_reg, pos_reg, subptr_loop_count);
       break;
-    case '[':
-      if (debug && dump) {
-        asm_arm64_immmov(&bin, 0, (int)'[');
-      }
+    }
+    case '[': {
       loop_count++;
       lpos[loop_count] = (uint64_t)bin.dest + (6 * 4);
 
@@ -176,8 +164,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       // asm_arm64_regstr(&bin, cur_loop_point_reg,
       //                  12); // Write position in memory
       break;
-    case ']':
-      printf("");
+    }
+    case ']': {
       uint32_t lpos = *(uint32_t *)stack_pop(&s_loops);
       rpos[lpos] = (uint64_t)bin.dest;
 
@@ -199,11 +187,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       // asm_arm64_immsub(&bin, loop_rpos, loop_rpos, 8);
 
       break;
-    case '+':
-      if (debug && dump) {
-        asm_arm64_immmov(&bin, 0, (int)'+');
-      }
-
+    }
+    case '+': {
       // Combine multiple addition operations into 1 instruction
       int add_loop_count = 1;
       int add_ch_int = 0;
@@ -225,10 +210,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       asm_arm64_regstrb(&bin, 13, value_at_pos_reg);
       asm_arm64_immmov(&bin, 13, 0); // Clear x13
       break;
-    case '-':
-      if (debug && dump) {
-        asm_arm64_immmov(&bin, 0, (int)'-');
-      }
+    }
+    case '-': {
       // Combine multiple addition operations into 1 instruction
       int sub_loop_count = 1;
       int sub_ch_int = 0;
@@ -250,10 +233,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       asm_arm64_regstrb(&bin, 13, value_at_pos_reg);
       asm_arm64_immmov(&bin, 13, 0); // Clear x13
       break;
-    case '.':
-      // asm_arm64_regmov(&bin, 20, 0);        // Copy position to 20
-      // asm_arm64_regmov(&bin, 21, 1);        // Copy pointer to 21
-      // asm_arm64_regmov(&bin, 22, 2);        // Copy 2 to 22
+    }
+    case '.': {
       asm_arm64_regadd(&bin, 1, pos_reg, data_reg, 0); // Value at position
 #ifdef __APPLE__
       asm_arm64_immmov(&bin, 16, write_syscall);
@@ -267,8 +248,8 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       asm_arm64_immmov(&bin, 1, 0);
       asm_arm64_immmov(&bin, 2, 0);
       break;
-
-    case ',':
+    }
+    case ',': {
       asm_arm64_immmov(&bin, 8, 63);                   // Read syscall
       asm_arm64_immmov(&bin, 0, 0);                    // STDIN
       asm_arm64_regadd(&bin, 1, pos_reg, data_reg, 0); // Value at position
@@ -281,6 +262,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       // exit(-1);
       break;
     }
+    }
   }
 
   asm_return(&bin);
@@ -290,8 +272,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
     exit(-1);
   }
 
-  // TODO: Find out why this is needed
-  printf("");
+  free(s_loops.data);
 
   return memory;
 }
