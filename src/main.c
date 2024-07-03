@@ -106,7 +106,19 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
         asm_arm64_immmov(&bin, 0, (int)'>');
       }
 
-      asm_arm64_immadd(&bin, pos_reg, pos_reg, 1);
+      int addptr_loop_count = 1;
+      int addptr_ch_int = 0;
+      while ((addptr_ch_int = fgetc(bf_file)) != EOF) {
+        char ch = (char)addptr_ch_int;
+
+        if (ch != '<') {
+          ungetc(ch, bf_file);
+          break;
+        }
+
+        addptr_loop_count++;
+      }
+      asm_arm64_immadd(&bin, pos_reg, pos_reg, addptr_loop_count);
       break;
     case '<':
       // Should it wrap?
@@ -115,7 +127,20 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       if (debug && dump) {
         asm_arm64_immmov(&bin, 0, (int)'<');
       }
-      asm_arm64_immsub(&bin, pos_reg, pos_reg, 1);
+
+      int subptr_loop_count = 1;
+      int subptr_ch_int = 0;
+      while ((subptr_ch_int = fgetc(bf_file)) != EOF) {
+        char ch = (char)subptr_ch_int;
+
+        if (ch != '<') {
+          ungetc(ch, bf_file);
+          break;
+        }
+
+        subptr_loop_count++;
+      }
+      asm_arm64_immsub(&bin, pos_reg, pos_reg, subptr_loop_count);
       break;
     case '[':
       if (debug && dump) {
@@ -179,10 +204,24 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
         asm_arm64_immmov(&bin, 0, (int)'+');
       }
 
+      // Combine multiple addition operations into 1 instruction
+      int add_loop_count = 1;
+      int add_ch_int = 0;
+      while ((add_ch_int = fgetc(bf_file)) != EOF) {
+        char ch = (char)add_ch_int;
+
+        if (ch != '+') {
+          ungetc(ch, bf_file);
+          break;
+        }
+
+        add_loop_count++;
+      }
+
       asm_arm64_regadd(&bin, value_at_pos_reg, pos_reg, data_reg,
                        0);                           // Value at position
       asm_arm64_regldrb(&bin, 13, value_at_pos_reg); // Load value to x13
-      asm_arm64_immadd(&bin, 13, 13, 1);
+      asm_arm64_immadd(&bin, 13, 13, add_loop_count);
       asm_arm64_regstrb(&bin, 13, value_at_pos_reg);
       asm_arm64_immmov(&bin, 13, 0); // Clear x13
       break;
@@ -190,11 +229,24 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       if (debug && dump) {
         asm_arm64_immmov(&bin, 0, (int)'-');
       }
+      // Combine multiple addition operations into 1 instruction
+      int sub_loop_count = 1;
+      int sub_ch_int = 0;
+      while ((sub_ch_int = fgetc(bf_file)) != EOF) {
+        char ch = (char)sub_ch_int;
+
+        if (ch != '-') {
+          ungetc(ch, bf_file);
+          break;
+        }
+
+        sub_loop_count++;
+      }
 
       asm_arm64_regadd(&bin, value_at_pos_reg, pos_reg, data_reg,
                        0);                           // Value at position
       asm_arm64_regldrb(&bin, 13, value_at_pos_reg); // Load value to x2
-      asm_arm64_immsub(&bin, 13, 13, 1);
+      asm_arm64_immsub(&bin, 13, 13, sub_loop_count);
       asm_arm64_regstrb(&bin, 13, value_at_pos_reg);
       asm_arm64_immmov(&bin, 13, 0); // Clear x13
       break;
