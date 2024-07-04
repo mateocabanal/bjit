@@ -107,7 +107,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       while ((addptr_ch_int = fgetc(bf_file)) != EOF) {
         char ch = (char)addptr_ch_int;
 
-        if (ch != '<') {
+        if (ch != '>') {
           ungetc(ch, bf_file);
           break;
         }
@@ -166,7 +166,11 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       break;
     }
     case ']': {
-      uint32_t lpos = *(uint32_t *)stack_pop(&s_loops);
+      uint32_t *lpos_ptr = (uint32_t *)stack_pop(&s_loops);
+      uint32_t lpos = *lpos_ptr;
+
+      free(lpos_ptr);
+
       rpos[lpos] = (uint64_t)bin.dest;
 
       if (debug) {
