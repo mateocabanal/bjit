@@ -23,4 +23,4 @@ I think this might make BJIT fall under the category of a AOT (Ahead-Of-Time) Co
 
 ### How does this JIT work?
 
-[My Blog Post](https://mateocabanal.ca/post/writing_a_bj_jit)
+[My Blog Post](https://mateocabanal.ca/post/writing_a_bf_jit)
