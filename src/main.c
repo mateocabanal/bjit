@@ -141,9 +141,9 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
         printf("L: loop id: %i\n", loop_count);
       }
 
-      uint32_t *loc = malloc(4);
-      *loc = loop_count;
-      stack_push(&s_loops, loc);
+      uint32_t *loop_id = malloc(4);
+      *loop_id = loop_count;
+      stack_push(&s_loops, loop_id);
 
       asm_arm64_regadd(&bin, value_at_pos_reg, pos_reg, data_reg,
                        0);                           // Value at position
@@ -166,16 +166,16 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       break;
     }
     case ']': {
-      uint32_t *lpos_ptr = (uint32_t *)stack_pop(&s_loops);
-      uint32_t lpos = *lpos_ptr;
+      uint32_t *loop_id_ptr = (uint32_t *)stack_pop(&s_loops);
+      uint32_t loop_id = *loop_id_ptr;
 
-      free(lpos_ptr);
+      free(loop_id_ptr);
 
       // Used for '[' to know where to jump if == 0
-      rpos[lpos] = (uint64_t)bin.dest;
+      rpos[loop_id] = (uint64_t)bin.dest;
 
       if (debug) {
-        printf("R: loop id: %i\n", lpos);
+        printf("R: loop id: %i\n", loop_id);
       }
 
       if (debug && dump) {
@@ -186,7 +186,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
       asm_arm64_regldrb(&bin, 13, value_at_pos_reg); // Load value to x13
       asm_arm64_pcrelbranch_ze(&bin, 13, 4); // If x13 is zero, jump (3 * 4)
       asm_arm64_immadd(&bin, 4, loop_lpos,
-                       lpos * 8);                  // sizeof(uint64_t) == 8
+                       loop_id * 8);               // sizeof(uint64_t) == 8
       asm_arm64_regldr(&bin, value_at_pos_reg, 4); // Load saved address
       asm_arm64_br(&bin, value_at_pos_reg);        // Branch to x12
       // asm_arm64_immsub(&bin, loop_rpos, loop_rpos, 8);
