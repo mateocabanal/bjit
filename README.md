@@ -12,15 +12,15 @@ I was able to get it into a working state in around ~24 hours. There might be so
 
 ✔️ Support user input via ',' syntax
 
-🚧 Support other architectures
+✔️  Optimize compiled instructions
 
-🚧 Optimize compiled instructions
+🚧 Support other architecture
 
 ### JIT Status
 This project might not fit the true definition of a Just-in-Time Compiler.
 The code reads a BF file character by character, than compiles the program and executes the resulting instructions.
 I think this might make BJIT fall under the category of a AOT (Ahead-Of-Time) Compiler.
 
-### How does a JIT work?
+### How does this JIT work?
 
-Coming soon...
+![My Blog Post](https://mateocabanal.ca/post/writing_a_bj_jit)
