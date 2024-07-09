@@ -171,6 +171,7 @@ uint8_t *compile_bf(FILE *bf_file, uint64_t *lpos, uint64_t *rpos, bool debug,
 
       free(lpos_ptr);
 
+      // Used for '[' to know where to jump if == 0
       rpos[lpos] = (uint64_t)bin.dest;
 
       if (debug) {
