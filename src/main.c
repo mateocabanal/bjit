@@ -341,7 +341,10 @@ int main(int argc, char **argv) {
   pthread_jit_write_protect_np(0); // Turn off so it is RW- (Apple only)
 #endif
 
-  printf("Compiling...\n");
+  if (debug) {
+    printf(ANSI_DEBUG_MSG);
+    printf("Compiling...\n");
+  }
 
   clock_t t;
   t = clock();
@@ -364,7 +367,10 @@ int main(int argc, char **argv) {
   sys_icache_invalidate(bin, JIT_MEM_SIZE); // Invalidation  (Apple Sil. only)
 #endif
 
-  printf("Running...\n\n");
+  if (debug) {
+    printf(ANSI_DEBUG_MSG);
+    printf("Running...\n");
+  }
 
   t = clock();
 
