@@ -35,7 +35,7 @@ void *stack_pop(Stack *stack) {
     stack->size--;
     return res;
   } else {
-    printf("returning null...\n");
+    printf("STACK: returning null...\n");
     return NULL;
   }
 }

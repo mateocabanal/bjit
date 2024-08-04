@@ -32,13 +32,13 @@ uint8_t *compile_bf(FILE *bf_file, bool debug, bool dump, char *dump_path) {
                   .dest_end = (uint64_t)memory + JIT_MEM_SIZE,
                   .dest_size = JIT_MEM_SIZE};
 
-  Stack s_loops = stack_init(1024 * 8);
+  Stack s_loops = stack_init(16384 * 8);
 
   uint32_t loop_count = 0;
   uint32_t depth = 0;
 
-  uint64_t *lpos = malloc(1024 * 8);
-  uint64_t *rpos = malloc(1024 * 8);
+  uint64_t *lpos = malloc(16384 * 8);
+  uint64_t *rpos = malloc(16384 * 8);
 
   const uint8_t pos_reg = 9;
   const uint8_t data_reg = 10;
@@ -129,6 +129,10 @@ uint8_t *compile_bf(FILE *bf_file, bool debug, bool dump, char *dump_path) {
     }
     case ']': {
       uint32_t *loop_id_ptr = (uint32_t *)stack_pop(&s_loops);
+      if (loop_id_ptr == NULL) {
+        printf("extra ']' in bf code\n");
+        exit(-1);
+      }
       uint32_t loop_id = *loop_id_ptr;
 
       free(loop_id_ptr);
@@ -303,11 +307,6 @@ int main(int argc, char **argv) {
 
       dump_path = argv[i];
     }
-  }
-
-  if (dump_bin) {
-    printf("DEBUG: Dumping enabled\n");
-    printf("DEBUG: Dumping at: %s\n", dump_path);
   }
 
   FILE *bf_file = fopen(argv[argc - 1], "r");

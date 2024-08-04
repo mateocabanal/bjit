@@ -1,7 +1,9 @@
+#include <string.h>
 #define _GNU_SOURCE
 
 #include "microasm.h"
 #include <elf.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +22,28 @@ void asm_write(microasm *a, int n, ...) {
 
 void asm_write_32bit(microasm *a, uint32_t instruction) {
   if ((uint64_t)a->dest == a->dest_end) {
-    mremap(a->dest, a->dest_size, a->dest_size + JIT_MEM_SIZE, 0);
+    printf("increasing JIT\n");
+
+#ifdef __APPLE__
+    uint8_t *new_map = mmap(NULL, a->dest_size + JIT_MEM_SIZE,
+                            PROT_READ | PROT_WRITE | PROT_EXEC,
+                            MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0);
+#else
+    uint8_t *new_map = mmap(NULL, a->dest_size + JIT_MEM_SIZE,
+                            PROT_READ | PROT_WRITE | PROT_EXEC,
+                            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
+
+    if (new_map == MAP_FAILED) {
+      printf("mmap failed!\n");
+      exit(-1);
+    }
+
+    memcpy(new_map, a->dest, a->dest_size);
+    printf("1\n");
+    munmap(a->dest, a->dest_size);
+
+    a->dest = new_map;
     a->dest_end = (uint64_t)a->dest + JIT_MEM_SIZE;
     a->dest_size += JIT_MEM_SIZE;
   }
