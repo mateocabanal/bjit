@@ -307,6 +307,20 @@ int main(int argc, char **argv) {
 
       dump_path = argv[i];
     }
+
+    if (strcmp(argv[i], "-h") == 0) {
+      goto help_menu;
+    }
+  }
+
+  if (strcmp(argv[argc - 1], "-h") == 0) {
+  help_menu:
+    printf("bfjit, a brainf*ck compiler/JIT\n\n");
+    printf("Options: \n");
+    printf("  -h\t\t\tPrint help menu\n");
+    printf("  -c <output file>\tCompile Brainf*ck to ARM64 ELF executable\n");
+    printf("  -d\t\t\tEnable Debug Logging\n");
+    return 0;
   }
 
   FILE *bf_file = fopen(argv[argc - 1], "r");
