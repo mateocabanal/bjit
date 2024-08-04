@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define JIT_MEM_SIZE ((1024 * 1024) * 4) // 32KB
+#define JIT_MEM_SIZE ((1024 * 1024) * 4) // 4MB
 
 typedef struct {
   uint8_t *dest;
