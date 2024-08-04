@@ -1,4 +1,3 @@
-#include <string.h>
 #define _GNU_SOURCE
 
 #include "microasm.h"
@@ -21,18 +20,7 @@ void asm_write(microasm *a, int n, ...) {
 
 void asm_write_32bit(microasm *a, uint32_t instruction) {
   if ((uint64_t)a->dest == a->dest_end) {
-#ifdef __APPLE__
-    uint8_t *new_mmap = mmap(NULL, a->dest_size + JIT_MEM_SIZE,
-                             PROT_READ | PROT_WRITE | PROT_EXEC,
-                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0);
-
-    memcpy(new_mmap, a->dest, a->count);
-    munmap(a->dest, a->count);
-    a->dest = new_mmap;
-#else
     mremap(a->dest, a->dest_size, a->dest_size + JIT_MEM_SIZE, 0);
-#endif
-
     a->dest_end = (uint64_t)a->dest + JIT_MEM_SIZE;
     a->dest_size += JIT_MEM_SIZE;
   }
@@ -184,6 +172,9 @@ void asm_return(microasm *a) {
 
 // This man is the goat: https://www.youtube.com/watch?v=JM9jX2aqkog
 void asm_write_exec(char *filename, microasm *bin) {
+  // NOTE: `CRT` of bfjit
+  // Allocates the Brainf*ck array and jumps to the JIT compiled code
+  // Gracefully returns on successful execution
   const uint8_t mapper_bin[] = {
       0xc8, 0x1b, 0x80, 0xd2, 0x00, 0x00, 0x80, 0xd2, 0x01, 0xa6, 0x8e, 0xd2,
       0x62, 0x00, 0x80, 0xd2, 0x43, 0x04, 0x80, 0xd2, 0x04, 0x00, 0x80, 0x92,
@@ -198,25 +189,52 @@ void asm_write_exec(char *filename, microasm *bin) {
                                        ELFOSABI_SYSV, 0, 0, 0, 0, 0, 0, 0, 0},
                            .e_type = ET_EXEC,
                            .e_machine = EM_AARCH64,
-                           .e_entry = 0x400078,
+                           .e_entry = 0x4000F8,
                            .e_phoff = 64,
-                           .e_shoff = 0,
+                           .e_shoff = 64 + 56,
                            .e_flags = 0,
                            .e_ehsize = 64,
                            .e_phentsize = 56,
                            .e_phnum = 1,
-                           .e_shnum = 0,
-                           .e_shentsize = 0,
-                           .e_shstrndx = SHN_UNDEF};
+                           .e_shnum = 2,
+                           .e_shentsize = 64,
+                           .e_shstrndx = 1};
 
   Elf64_Phdr elf_phdr = {.p_type = PT_LOAD,
-                         .p_offset = 0x78,
-                         .p_vaddr = 0x400078,
-                         .p_paddr = 0x400078,
+                         .p_offset = 0xF8,
+                         .p_vaddr = 0x4000F8,
+                         .p_paddr = 0x4000F8,
                          .p_filesz = prog_len,
                          .p_memsz = prog_len,
                          .p_flags = PF_X | PF_R,
                          .p_align = 0x8};
+
+  Elf64_Shdr elf_shdr_text = {
+      .sh_name = 7,
+      .sh_type = SHT_PROGBITS,
+      .sh_flags = SHF_ALLOC | SHF_EXECINSTR,
+      .sh_addr = 0x4000F8,
+      .sh_offset = 0x0000F8,
+      .sh_size = prog_len,
+      .sh_link = 0,
+      .sh_info = 0,
+      .sh_addralign = 0x8,
+      .sh_entsize = 64,
+  };
+
+  char shstrtab[] = "\0.null\0.text\0.shstrtab";
+  Elf64_Shdr elf_shdr_shstrtab = {
+      .sh_name = 13,
+      .sh_type = SHT_STRTAB,
+      .sh_flags = 0,
+      .sh_addr = 0,
+      .sh_offset = 0xF8 + prog_len,
+      .sh_size = sizeof(shstrtab),
+      .sh_link = 0,
+      .sh_info = 0,
+      .sh_addralign = 0x8,
+      .sh_entsize = 64,
+  };
 
   FILE *f = fopen(filename, "w");
   if (!f) {
@@ -226,8 +244,11 @@ void asm_write_exec(char *filename, microasm *bin) {
 
   fwrite(&elf_header, 1, sizeof(elf_header), f);
   fwrite(&elf_phdr, 1, sizeof(elf_phdr), f);
+  fwrite(&elf_shdr_text, 1, sizeof(elf_shdr_text), f);
+  fwrite(&elf_shdr_shstrtab, 1, sizeof(elf_shdr_shstrtab), f);
   fwrite(mapper_bin, 1, sizeof(mapper_bin), f);
   fwrite(bin->dest - bin->count * 4, 1, bin->count * 4, f);
+  fwrite(shstrtab, 1, sizeof(shstrtab), f);
 
   chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR);
   fclose(f);
