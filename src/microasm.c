@@ -1,3 +1,4 @@
+#include <string.h>
 #define _GNU_SOURCE
 
 #include "microasm.h"
@@ -20,7 +21,18 @@ void asm_write(microasm *a, int n, ...) {
 
 void asm_write_32bit(microasm *a, uint32_t instruction) {
   if ((uint64_t)a->dest == a->dest_end) {
+#ifdef __APPLE__
+    uint8_t *new_mmap = mmap(NULL, a->dest_size + JIT_MEM_SIZE,
+                             PROT_READ | PROT_WRITE | PROT_EXEC,
+                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0);
+
+    memcpy(new_mmap, a->dest, a->count);
+    munmap(a->dest, a->count);
+    a->dest = new_mmap;
+#else
     mremap(a->dest, a->dest_size, a->dest_size + JIT_MEM_SIZE, 0);
+#endif
+
     a->dest_end = (uint64_t)a->dest + JIT_MEM_SIZE;
     a->dest_size += JIT_MEM_SIZE;
   }
