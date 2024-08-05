@@ -182,7 +182,7 @@ void asm_write_exec(char *filename, microasm *bin) {
   const uint8_t mapper_bin[] = {
       0xc8, 0x1b, 0x80, 0xd2, 0x00, 0x00, 0x80, 0xd2, 0x01, 0xa6, 0x8e, 0xd2,
       0x62, 0x00, 0x80, 0xd2, 0x43, 0x04, 0x80, 0xd2, 0x04, 0x00, 0x80, 0x92,
-      0x05, 0x00, 0x80, 0xd2, 0x01, 0x00, 0x00, 0xd4, 0x05, 0x00, 0x00, 0x94,
+      0x05, 0x00, 0x80, 0xd2, 0x01, 0x00, 0x00, 0xd4, 0x06, 0x00, 0x00, 0x94,
       0xe8, 0x1a, 0x80, 0xd2, 0x01, 0x00, 0x00, 0xd4, 0xa8, 0x0b, 0x80, 0xd2,
       0x00, 0x00, 0x80, 0xd2, 0x01, 0x00, 0x00, 0xd4};
 
@@ -193,32 +193,45 @@ void asm_write_exec(char *filename, microasm *bin) {
                                        ELFOSABI_SYSV, 0, 0, 0, 0, 0, 0, 0, 0},
                            .e_type = ET_EXEC,
                            .e_machine = EM_AARCH64,
-                           .e_entry = 0x4000F8,
+                           .e_entry = 0x400138,
                            .e_phoff = 64,
                            .e_shoff = 64 + 56,
                            .e_flags = 0,
                            .e_ehsize = 64,
                            .e_phentsize = 56,
                            .e_phnum = 1,
-                           .e_shnum = 2,
+                           .e_shnum = 3,
                            .e_shentsize = 64,
-                           .e_shstrndx = 1};
+                           .e_shstrndx = 2};
 
   Elf64_Phdr elf_phdr = {.p_type = PT_LOAD,
-                         .p_offset = 0xF8,
-                         .p_vaddr = 0x4000F8,
-                         .p_paddr = 0x4000F8,
+                         .p_offset = 0x138,
+                         .p_vaddr = 0x400138,
+                         .p_paddr = 0x400138,
                          .p_filesz = prog_len,
                          .p_memsz = prog_len,
                          .p_flags = PF_X | PF_R,
                          .p_align = 0x8};
 
+  Elf64_Shdr elf_shdr_null = {
+      .sh_name = 0,
+      .sh_type = SHT_NULL,
+      .sh_flags = 0,
+      .sh_addr = 0,
+      .sh_offset = 0,
+      .sh_size = 0,
+      .sh_link = 0,
+      .sh_info = 0,
+      .sh_addralign = 8,
+      .sh_entsize = 64,
+  };
+
   Elf64_Shdr elf_shdr_text = {
       .sh_name = 7,
       .sh_type = SHT_PROGBITS,
       .sh_flags = SHF_ALLOC | SHF_EXECINSTR,
-      .sh_addr = 0x4000F8,
-      .sh_offset = 0x0000F8,
+      .sh_addr = 0x400138,
+      .sh_offset = 0x000138,
       .sh_size = prog_len,
       .sh_link = 0,
       .sh_info = 0,
@@ -232,7 +245,7 @@ void asm_write_exec(char *filename, microasm *bin) {
       .sh_type = SHT_STRTAB,
       .sh_flags = 0,
       .sh_addr = 0,
-      .sh_offset = 0xF8 + prog_len,
+      .sh_offset = 0x138 + prog_len,
       .sh_size = sizeof(shstrtab),
       .sh_link = 0,
       .sh_info = 0,
@@ -248,6 +261,7 @@ void asm_write_exec(char *filename, microasm *bin) {
 
   fwrite(&elf_header, 1, sizeof(elf_header), f);
   fwrite(&elf_phdr, 1, sizeof(elf_phdr), f);
+  fwrite(&elf_shdr_null, 1, sizeof(elf_shdr_null), f);
   fwrite(&elf_shdr_text, 1, sizeof(elf_shdr_text), f);
   fwrite(&elf_shdr_shstrtab, 1, sizeof(elf_shdr_shstrtab), f);
   fwrite(mapper_bin, 1, sizeof(mapper_bin), f);

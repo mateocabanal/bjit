@@ -25,4 +25,8 @@ add_compile_definitions("DEBUG=$<CONFIG:Debug>")
 enable_testing()
 
 add_test(NAME hello_world COMMAND bjit ../bf_tests/hello.bf)
+add_test(NAME cell_size COMMAND bjit ../bf_tests/cellsize.bf)
+
 set_tests_properties(hello_world PROPERTIES PASS_REGULAR_EXPRESSION "Hello World!")
+set_tests_properties(cell_size PROPERTIES PASS_REGULAR_EXPRESSION "This interpreter has 8bit cells.")
+
