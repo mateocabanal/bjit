@@ -18,6 +18,24 @@ I was able to get it into a working state in around ~24 hours. There might be so
 
 🚧 Support other architectures
 
+### Usage
+
+#### Getting Started
+```bash
+git clone https://github.com/mateocabanal/bjit
+cd bjit
+cmake -B build
+cd build
+cmake --build .
+bjit ../bf_tests/hello.bf
+```
+
+#### Help Menu
+```bjit -h```
+
+#### Compile BF to ARM64 ELF
+```bjit -c <output file> <input file>```
+
 ### JIT Status
 This project might not fit the true definition of a Just-in-Time Compiler.
 The code reads a BF file character by character, than compiles the program and executes the resulting instructions.
