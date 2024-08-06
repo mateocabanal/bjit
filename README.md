@@ -12,9 +12,11 @@ I was able to get it into a working state in around ~24 hours. There might be so
 
 ✔️ Support user input via ',' syntax
 
-✔️  Optimize compiled instructions
+✔️ Optimize compiled instructions
 
-🚧 Support other architecture
+✔️ Compile Brainfuck -> ELF
+
+🚧 Support other architectures
 
 ### JIT Status
 This project might not fit the true definition of a Just-in-Time Compiler.
