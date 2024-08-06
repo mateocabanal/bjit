@@ -27,7 +27,7 @@ cd bjit
 cmake -B build
 cd build
 cmake --build .
-bjit ../bf_tests/hello.bf
+./bjit ../bf_tests/hello.bf
 ```
 
 #### Help Menu
